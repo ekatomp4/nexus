@@ -1,0 +1,234 @@
+:root {
+  --base: #1a1a1a;
+  /* main background */
+  --base-light: #2a2a2a;
+  /* slightly lighter for content */
+  --base-dark: #111111;
+  /* darker for sidebar/footer */
+  --accent: #87cbff;
+  /* red accent color */
+  --accent-opaque: #87cbff2e;
+  --glow: 0px 0px 4px var(--accent);
+  --underglow: 2px 4px 1px var(--accent-opaque);
+  --borderThickness: 2px;
+  --radius: 5px;
+  --blinkerSpeed: 0.8s;
+}
+
+* {
+  color: var(--accent);
+  font-family: monospace;
+  text-shadow: var(--underglow);
+}
+
+body {
+  margin: 0;
+  background: var(--base);
+}
+
+.flex {
+  display: flex;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+}
+
+.center {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+.content > .chatContainer {
+  display: flex;
+  flex-direction: row-reverse;
+  width: 100%;
+  height: 100%;
+}
+
+
+#chatOutput {
+  position: relative;
+  flex: 1;
+  overflow-y: scroll;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 5px;
+}
+
+#chatOutput>#restartSTT {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50px;
+  padding: 0;
+  margin: 0;
+  background-color: red;
+  aspect-ratio: 1 / 1;
+}
+
+
+#camContainer {
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  max-height: 100%;
+  flex: 0 0 50px;
+
+  display: flex;
+  align-items: flex-start;
+  border-left: var(--borderThickness) solid var(--accent);
+
+  transition: all 0.3s ease;
+}
+#camContainer:hover {
+  cursor: pointer;
+  flex: 0 0 50%;
+}
+
+#camContainer > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Canvas overlay */
+#camContainer > canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  object-fit: cover;
+}
+
+.chatSection {
+  border: var(--borderThickness) solid var(--accent);
+  /* box-shadow: var(--glow); */
+  border-radius: var(--radius);
+  box-shadow: var(--underglow)
+}
+
+#chatInput {
+  display: flex;
+  align-items: center;
+  min-height: 50px;
+  font-size: 1.5em;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 5px 10px;
+  outline: none;
+}
+
+
+#chatInput::after {
+  content: "_";
+  animation: blink var(--blinkerSpeed) step-end infinite;
+}
+
+@keyframes blink {
+
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+#chatSend {
+  min-height: 25px;
+  width: 25%;
+  align-self: flex-end;
+}
+
+.sidebar {
+  width: 200px;
+  height: 100%;
+}
+
+.bottom {
+  width: 100%;
+  height: 40vh;
+}
+
+.button {
+  border: none;
+  color: var(--text);
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: var(--base);
+}
+
+.button:hover,
+.buttonActive {
+  background-color: var(--accent);
+  color: var(--base);
+}
+
+#positionOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  object-fit: cover;
+  z-index: 100;
+  pointer-events: none;
+  /* background:rgba(255, 0, 0, 0.095); */
+}
+
+
+
+
+
+.scrollable {
+  overflow-y: auto; /* vertical scroll */
+  scrollbar-width: thin; /* Firefox fallback */
+  scrollbar-color: var(--accent) var(--base-light); /* Firefox */
+}
+
+/* WebKit browsers (Chrome, Safari, Edge) */
+.scrollable::-webkit-scrollbar {
+  width: 8px; /* thickness */
+}
+
+.scrollable::-webkit-scrollbar-track {
+  background: var(--base-light);
+  border-radius: var(--radius);
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+  background-color: var(--accent);
+  border-radius: var(--radius);
+  border: 2px solid var(--base-light); /* spacing around thumb */
+}
+
+.scrollable::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent-opaque);
+}

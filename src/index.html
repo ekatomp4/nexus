@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tauri App</title>
+
+    <script type="module" src="/main.js" defer></script>
+
+
+    <script src="./libs/core/tf-core.js"></script>
+    <script src="./libs/hands/handPose.js"></script>
+    <script src="./libs/hands/hands.js"></script>
+
+
+  </head>
+  <body>
+
+    <canvas id="positionOverlay"></canvas>
+
+    <main>
+
+      <div class="center">
+        <div class="sidebar">
+          <div class="button buttonActive">Chat</div>
+          <div id="installButton" class="button">Install</div>
+          <!-- <div class="button">Tools</div>
+          <div class="button">Memory</div> -->
+          
+        </div>
+        <div class="content">
+
+
+          <div class="flex chatContainer">
+
+            
+            <div id="camContainer">
+              <canvas id="camOverlay"></canvas>
+              <video id="cam" autoplay playsinline></video>
+            </div>
+
+            <div id="chatOutput" class="scrollable">
+              <button id="restartSTT">STT</button>
+            </div>
+
+          </div>
+
+          <div class="flex chatSection">
+
+            <div type="text" id="chatInput" contenteditable></div>
+            <div id="chatSend" class="button">Send</div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="bottom">
+        Status, as each chunk comes in, flash a green light. also sounds
+        GUI moves with head for parrallax
+        Control panel at bottom like an audio board, can actually twist them with your fingers
+        5 points on the screen for each finger position
+      </div>
+    </main>
+
+  </body>
+</html>

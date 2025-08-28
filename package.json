@@ -1,0 +1,22 @@
+{
+  "name": "thenexusbase",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "server-dev": "cd src-tauri && cd server && npm run dev",
+
+    "check": "cd src-tauri && cargo check",
+    
+    "train": "python train/train.py",
+    "install": "node src-tauri/server/train/install.js"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  },
+  "dependencies": {
+    "zod": "^4.0.17"
+  }
+}

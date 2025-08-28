@@ -1,0 +1,38 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@tensorflow-models/mobilenet": "^2.1.1",
+    "@tensorflow/tfjs": "^4.22.0",
+    "@tensorflow/tfjs-backend-wasm": "^4.22.0",
+    "@tensorflow/tfjs-node": "^1.7.4",
+    "@tensorflow/tfjs-node-gpu": "^4.22.0",
+    "@vladmandic/face-api": "^1.7.15",
+    "axios": "^1.11.0",
+    "bcrypt": "^6.0.0",
+    "canvas": "^3.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-fileupload": "^1.5.2",
+    "face-api.js": "^0.22.2",
+    "install": "^0.13.0",
+    "npm": "^11.5.2",
+    "ollama": "^0.5.17",
+    "sharp": "^0.34.3",
+    "wikipedia": "^2.1.2",
+    "ws": "^8.18.3"
+  },
+  "overrides": {},
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

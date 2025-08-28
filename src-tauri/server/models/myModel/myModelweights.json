@@ -1,0 +1,1 @@
+[{"name":"embedding_Embedding1/embeddings","shape":[4,8],"dtype":"float32"},{"name":"dense_Dense1/kernel","shape":[48,8],"dtype":"float32"},{"name":"dense_Dense1/bias","shape":[8],"dtype":"float32"},{"name":"dense_Dense2/kernel","shape":[8,1],"dtype":"float32"},{"name":"dense_Dense2/bias","shape":[1],"dtype":"float32"}]

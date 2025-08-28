@@ -1,0 +1,2 @@
+.Instilation w/ ollama setup if command dopesnt exist, instal models,
+set custom params
