@@ -208,8 +208,6 @@ const HandOverlay = {
           (g) => g === gestures[LoR] && g !== null
         );
         let currentGestures = {};
-
-        
         if (allSame) {
           this.handleAction(LoR, gestures[LoR], hand, scaleX, scaleY);
           currentGestures[LoR] = gestures[LoR];
@@ -218,7 +216,6 @@ const HandOverlay = {
           currentPinched.forEach((el) => el.classList.remove("pinched"));
         }
         
-
 
         // --- Draw keypoints ---
         hand.keypoints.forEach((kp) => {
@@ -282,9 +279,7 @@ const HandOverlay = {
 
           // Check pinchable element at index finger position
           const elems = document.elementsFromPoint(indexX, indexY);
-          // --- Pinch check ---
-          const currentPinched = document.querySelectorAll(".pinched");
-          currentPinched.forEach((el) => el.classList.remove("pinched"));
+          // remove pinched class from all elements
           // pinchable element
           const pinched = elems.find((el) => el.hasAttribute("data-pinchable"));
           if (pinched) {

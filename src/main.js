@@ -259,3 +259,45 @@ installButton.addEventListener("click", async () => {
   };
 })
 
+// TESTING GAN
+
+
+// import GAN from "./modules/GAN/GAN.js";
+// // --- Prepare training data ---
+// const trainingData = [
+//   { input: "Black", canvas: document.createElement("canvas") },
+//   { input: "Grey", canvas: document.createElement("canvas") },
+//   { input: "White", canvas: document.createElement("canvas") },
+// ];
+
+// // Fill training canvases
+
+// trainingData.forEach((data) => {
+//   const { canvas, input } = data;
+//   canvas.width = 64;
+//   canvas.height = 64;
+//   const ctx = canvas.getContext("2d");
+
+//   switch (input.toLowerCase()) {
+//     case "black":
+//       ctx.fillStyle = "#000000";
+//       break;
+//     case "grey":
+//       ctx.fillStyle = "#808080";
+//       break;
+//     case "white":
+//       ctx.fillStyle = "#FFFFFF";
+//       break;
+//     default:
+//       ctx.fillStyle = "#FF00FF"; // fallback
+//   }
+
+//   ctx.fillRect(0, 0, canvas.width, canvas.height);
+// });
+
+// // --- Initialize GAN ---
+// GAN.init?.(); // optional, if you have an init function
+
+// // --- Start training ---
+// // The GAN will use the trainingData and draw outputs on a top-left red canvas
+// GAN.train(trainingData);
