@@ -14,7 +14,7 @@ class Camera {
     this.running = false;
     this._frameRequest = null;
 
-    this.handRefreshRate = 3;
+    this.handRefreshRate = 2; // min 1 
 
     this.tick = 0;
     this.hands = [];
@@ -80,7 +80,7 @@ class Camera {
     const model = handPoseDetection.SupportedModels.MediaPipeHands;
     const detectorConfig = {
       runtime: "mediapipe",
-      solutionPath: "https://cdn.jsdelivr.net/npm/@mediapipe/hands",
+      solutionPath: "https://cdn.jsdelivr.net/npm/@mediapipe/hands", // TODO instal this
       modelType: "lite",
     };
     this.detector = await handPoseDetection.createDetector(

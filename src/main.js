@@ -258,3 +258,4 @@ installButton.addEventListener("click", async () => {
     alert(`Installed Models: granite3.3:2b, qwen2.5-coder:3b, granite3.2-vision:2b`);
   };
 })
+

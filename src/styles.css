@@ -24,6 +24,8 @@
 body {
   margin: 0;
   background: var(--base);
+
+  overflow: hidden;
 }
 
 .flex {
@@ -170,6 +172,11 @@ main {
 .bottom {
   width: 100%;
   height: 40vh;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 10px;
+  gap: 10px;
 }
 
 .button {
@@ -231,4 +238,50 @@ main {
 
 .scrollable::-webkit-scrollbar-thumb:hover {
   background-color: var(--accent-opaque);
+}
+
+
+
+/* bottom */
+
+.dial {
+  transition: 0.4s;
+  position: relative;
+
+  width: 10vw;
+  height: 10vw;
+  max-width: 100%;
+  max-height: 100%;
+  /* height: 100px; */
+
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  box-shadow: var(--glow);
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      var(--accent) 0deg 2deg,   /* notch color and size */
+      var(--base-light) 2deg 10deg  /* space between notches */
+    );
+  background-color: var(--base-light);
+  position: relative;
+  animation: spin 8s linear infinite;
+}
+.dial::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 85%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background-color: var(--base-light);
+}
+
+.pinched {
+  transition: all 0.3s ease;
+  transform: scale(0.9);
+  background-color: var(--accent);
+  box-shadow: var(--glow);
 }

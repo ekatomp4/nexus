@@ -24,9 +24,9 @@
 
 // Hardcoded gestures with priority
 const gestureList = {
-  Pinch: {
+  "Pinch": {
     distances: [
-      { start: "thumb_tip", end: "index_finger_tip", max: 25 }, // max percent of hand size
+      { start: "thumb_tip", end: "index_finger_tip", max: 20 }, // max percent of hand size
     ],
     priority: 1,
   },
@@ -167,6 +167,9 @@ const HandOverlay = {
   camera: null,
 
   pinchedElement: null,
+  originalPinchRotation: null,
+  originalPinchPosition: null,
+
   gestureHistory: { left: [], right: [] }, // track recent gestures for each hand
 
   init: function (camera) {
@@ -205,10 +208,17 @@ const HandOverlay = {
           (g) => g === gestures[LoR] && g !== null
         );
         let currentGestures = {};
+
+        
         if (allSame) {
           this.handleAction(LoR, gestures[LoR], hand, scaleX, scaleY);
           currentGestures[LoR] = gestures[LoR];
+        } else {
+          const currentPinched = document.querySelectorAll(".pinched");
+          currentPinched.forEach((el) => el.classList.remove("pinched"));
         }
+        
+
 
         // --- Draw keypoints ---
         hand.keypoints.forEach((kp) => {
@@ -272,8 +282,23 @@ const HandOverlay = {
 
           // Check pinchable element at index finger position
           const elems = document.elementsFromPoint(indexX, indexY);
+          // --- Pinch check ---
+          const currentPinched = document.querySelectorAll(".pinched");
+          currentPinched.forEach((el) => el.classList.remove("pinched"));
+          // pinchable element
           const pinched = elems.find((el) => el.hasAttribute("data-pinchable"));
-          if (pinched) this.pinchedElement = pinched;
+          if (pinched) {
+            this.pinchedElement = pinched;
+            this.originalPinchRotation = getHandRotation(hand);
+            this.originalPinchPosition = { x: midX, y: midY };
+
+            this.pinchedElement.classList.add("pinched");
+            // this.pinchedElement.style.transform = `scale(1.2)`;
+          } else {
+            this.pinchedElement = null;
+            this.originalPinchRotation = null;
+            this.originalPinchPosition = null;
+          };
         }
         break;
 
