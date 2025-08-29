@@ -130,8 +130,8 @@ let speaking = false;
 /**
  * Pollinations AI TTS only — fetches the audio Blob
  */
-async function fetchAIVoice(text, voice = "onyx") {
-    const formattedText = `Repeat this exactly, patient vibe, "${text}"`;
+async function fetchAIVoice(text, voice = "fable") {
+    const formattedText = `Repeat this exactly, patient vibe, fast talking pace, deeper voice, no rasp, clear, consistent pitch: "${text}"`;
     const url = `https://text.pollinations.ai/${encodeURIComponent(formattedText)}?model=openai-audio&voice=${voice}`;
 
     try {
@@ -181,7 +181,7 @@ async function processQueue() {
 async function Send(text, options = {}) {
     if (!text) return null;
 
-    const voice = options.voice ?? "onyx";
+    const voice = options.voice ?? "fable";
     const audioData = await fetchAIVoice(text, voice);
     if (!audioData) return null;
 

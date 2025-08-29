@@ -22,9 +22,37 @@
 20: pinky_finger_tip
 */
 
+const bones = [
+  // Thumb
+  ["wrist", "thumb_cmc"],
+  ["thumb_cmc", "thumb_mcp"],
+  ["thumb_mcp", "thumb_ip"],
+  ["thumb_ip", "thumb_tip"],
+  // Index
+  ["wrist", "index_finger_mcp"],
+  ["index_finger_mcp", "index_finger_pip"],
+  ["index_finger_pip", "index_finger_dip"],
+  ["index_finger_dip", "index_finger_tip"],
+  // Middle
+  ["wrist", "middle_finger_mcp"],
+  ["middle_finger_mcp", "middle_finger_pip"],
+  ["middle_finger_pip", "middle_finger_dip"],
+  ["middle_finger_dip", "middle_finger_tip"],
+  // Ring
+  ["wrist", "ring_finger_mcp"],
+  ["ring_finger_mcp", "ring_finger_pip"],
+  ["ring_finger_pip", "ring_finger_dip"],
+  ["ring_finger_dip", "ring_finger_tip"],
+  // Pinky
+  ["wrist", "pinky_finger_mcp"],
+  ["pinky_finger_mcp", "pinky_finger_pip"],
+  ["pinky_finger_pip", "pinky_finger_dip"],
+  ["pinky_finger_dip", "pinky_finger_tip"],
+];
+
 // Hardcoded gestures with priority
 const gestureList = {
-  "Pinch": {
+  Pinch: {
     distances: [
       { start: "thumb_tip", end: "index_finger_tip", max: 20 }, // max percent of hand size
     ],
@@ -186,7 +214,6 @@ const HandOverlay = {
   midX: null,
   midY: null,
 
-
   gestureHistory: { left: [], right: [] }, // track recent gestures for each hand
 
   init: function (camera) {
@@ -218,11 +245,11 @@ const HandOverlay = {
         detectedHands[LoR] = true;
 
         // update positions
-        if(this.midX && this.midY) {
+        if (this.midX && this.midY) {
           this.currentPositions[LoR] = {
             x: this.midX,
-            y: this.midY
-          }
+            y: this.midY,
+          };
         }
         this.currentRotations[LoR] = getHandRotation(hand);
         this.currentDistances[LoR] = this.getDistanceFromCamera(hand);
@@ -242,42 +269,47 @@ const HandOverlay = {
         if (this.gestureHistory[LoR].some((g) => g === null)) {
           allSame = false;
         }
-        
+
         let currentGestures = {};
 
-
         // set changes
-        if(this.originalPinchedDistances[LoR]) {
-          this.currentDistanceChange[LoR] = this.currentDistances[LoR] - this.originalPinchedDistances[LoR];
+        if (this.originalPinchedDistances[LoR]) {
+          this.currentDistanceChange[LoR] =
+            this.currentDistances[LoR] - this.originalPinchedDistances[LoR];
         }
-        if(this.originalPinchedRotations[LoR]) {
-          this.currentRotationChange[LoR] = this.currentRotations[LoR] - this.originalPinchedRotations[LoR];
+        if (this.originalPinchedRotations[LoR]) {
+          this.currentRotationChange[LoR] =
+            this.currentRotations[LoR] - this.originalPinchedRotations[LoR];
         }
-        if(this.originalPinchedPositions[LoR]) {
+        if (this.originalPinchedPositions[LoR]) {
           this.currentPositionChange[LoR] = {
-            x: this.currentPositions[LoR].x - this.originalPinchedPositions[LoR].x,
-            y: this.currentPositions[LoR].y - this.originalPinchedPositions[LoR].y
+            x:
+              this.currentPositions[LoR].x -
+              this.originalPinchedPositions[LoR].x,
+            y:
+              this.currentPositions[LoR].y -
+              this.originalPinchedPositions[LoR].y,
           };
         }
 
         // --- Handle action ---
         if (allSame) {
-
           this.lastGestures[LoR] = gestures[LoR];
           this.handleAction(LoR, gestures[LoR], hand, scaleX, scaleY);
           currentGestures[LoR] = gestures[LoR];
           this.gestureTimeouts[LoR] = 0;
-
-        } else if(this.lastGestures[LoR] && this.gestureTimeouts[LoR] <  this.maxGestureTimeout) {
-
+        } else if (
+          this.lastGestures[LoR] &&
+          this.gestureTimeouts[LoR] < this.maxGestureTimeout
+        ) {
           this.gestureTimeouts[LoR]++;
           this.handleAction(LoR, gestures[LoR], hand, scaleX, scaleY);
           currentGestures[LoR] = this.lastGestures[LoR];
-
         } else {
           currentGestures[LoR] = null;
           // set origins
-          if (gestures[LoR] != "Pinch") { // reset
+          if (gestures[LoR] != "Pinch") {
+            // reset
             this.originalPinchedPositions[LoR] = null;
             this.originalPinchedRotations[LoR] = null;
             this.originalPinchedDistances[LoR] = null;
@@ -288,24 +320,36 @@ const HandOverlay = {
         }
 
         // --- Draw keypoints ---
+        // Draw wiremesh for this hand
+        ctx.strokeStyle = currentGestures[LoR] ? "green" : "red";
+        ctx.lineWidth = 5;
+
+        ctx.globalAlpha = 0.3;
+        bones.forEach(([startName, endName]) => {
+          const startKp = hand.keypoints.find((kp) => kp.name === startName);
+          const endKp = hand.keypoints.find((kp) => kp.name === endName);
+          if (!startKp || !endKp) return;
+
+          const startX = startKp.x * scaleX;
+          const startY = startKp.y * scaleY;
+          const endX = endKp.x * scaleX;
+          const endY = endKp.y * scaleY;
+
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(endX, endY);
+          ctx.stroke();
+        });
+        ctx.globalAlpha = 1;
+        // keypoints
         hand.keypoints.forEach((kp) => {
-          const rotation = getHandRotation(hand);
-          ctx.fillText(
-            `${hand.handedness} hand rotation: ${rotation?.toFixed(1)}°`,
-            10,
-            LoR === "left" ? 30 : 50
-          );
-
-          if (currentGestures[LoR]) {
-            ctx.fillStyle = "green";
-          } else {
-            ctx.fillStyle = "red";
-          }
-
+          // if(!kp.name.includes("tip")) return;
+          // ctx.fillText(kp.name, kp.x * scaleX + 10, kp.y * scaleY);
           const x = kp.x * scaleX;
           const y = kp.y * scaleY;
           ctx.beginPath();
           ctx.arc(x, y, 5, 0, Math.PI * 2);
+          ctx.fillStyle = currentGestures[LoR] ? "green" : "red";
           ctx.fill();
         });
       });
@@ -361,15 +405,15 @@ const HandOverlay = {
           this.midY = midY;
 
           // Draw circle at midpoint
-          ctx.fillStyle = "orange"
+          ctx.fillStyle = "orange";
           ctx.beginPath();
-          ctx.arc(midX, midY, 10, 0, 2 * Math.PI);
+          ctx.arc(midX, midY, 5, 0, 2 * Math.PI);
           ctx.fill();
 
           // get element at position
           const element = document.elementFromPoint(midX, midY);
           if (element) {
-            const clickEvent = new MouseEvent('click', {
+            const clickEvent = new MouseEvent("click", {
               bubbles: true,
               cancelable: true,
               view: window,
@@ -377,13 +421,14 @@ const HandOverlay = {
             element.dispatchEvent(clickEvent);
           }
 
-          // set vars 
-          if(!this.originalPinchedDistances[handSide]) {
-            this.originalPinchedDistances[handSide] = this.currentDistances[handSide];
-            this.originalPinchedPositions[handSide] = {x: midX, y: midY};
-            this.originalPinchedRotations[handSide] = this.currentRotations[handSide];
+          // set vars
+          if (!this.originalPinchedDistances[handSide]) {
+            this.originalPinchedDistances[handSide] =
+              this.currentDistances[handSide];
+            this.originalPinchedPositions[handSide] = { x: midX, y: midY };
+            this.originalPinchedRotations[handSide] =
+              this.currentRotations[handSide];
           }
-
         }
         break;
 
