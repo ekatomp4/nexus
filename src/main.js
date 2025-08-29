@@ -301,3 +301,100 @@ installButton.addEventListener("click", async () => {
 // // --- Start training ---
 // // The GAN will use the trainingData and draw outputs on a top-left red canvas
 // GAN.train(trainingData);
+
+
+async function fetchAndDrawImage(prompt, width = 512, height = 512, seed = Date.now()) {
+  // Build URL
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+
+  // Load image
+  const img = new Image();
+  img.crossOrigin = "anonymous"; // allow canvas access
+  img.src = url;
+
+  return new Promise((resolve, reject) => {
+      img.onload = () => {
+          // Create canvas
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          canvas.style.position = "absolute";
+          canvas.style.top = "0px";
+          canvas.style.left = "0px";
+          document.body.appendChild(canvas);
+
+          // Draw image
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          resolve(canvas);
+      };
+
+      img.onerror = reject;
+  });
+}
+
+// TTS.send("Welcome back Sir!");
+
+// fetchAndDrawImage("Chicken jockey minecraft").then((canvas) => {
+//   console.log(canvas);
+// });
+
+// async function AIVoice(text, voice = "alloy") {
+//   const formattedText = `Say this, repeat exactly: "${text}"`; // wrap in quotes
+//   const url = `https://text.pollinations.ai/${encodeURIComponent( formattedText )}?model=openai-audio&voice=${voice}`;
+
+//   try {
+//     const res = await fetch(url, {
+//       headers: { "Accept": "audio/mpeg" }
+//     });
+
+//     if (!res.ok) {
+//       console.error("AIVoice fetch failed:", res.status, res.statusText);
+//       return;
+//     }
+
+//     const blob = await res.blob();
+//     const audioUrl = URL.createObjectURL(blob);
+
+//     const audio = new Audio(audioUrl);
+//     audio.play();
+
+//     return audio;
+//   } catch (err) {
+//     console.error("AIVoice error:", err);
+//   }
+// }
+
+// // Example:
+// AIVoice("What is a dolphin?", "nova");
+
+
+/*
+## Pollinations.AI Cheatsheet for Coding Assistants
+
+### Image Generation
+Generate Image: `GET https://image.pollinations.ai/prompt/{prompt}`
+
+### Image Models
+List Models: `GET https://image.pollinations.ai/models`
+
+### Text Generation
+Generate (GET): `GET https://text.pollinations.ai/{prompt}`
+
+### Text Generation (Advanced)
+Generate (POST): `POST https://text.pollinations.ai/`
+
+### Audio Generation
+Generate Audio: `GET https://text.pollinations.ai/{prompt}?model=openai-audio&voice={voice}`
+
+### OpenAI Compatible Endpoint
+OpenAI Compatible: `POST https://text.pollinations.ai/openai`        
+
+### Text Models              
+List Models: `GET https://text.pollinations.ai/models` 
+### Real-time Feeds
+Image Feed: `GET https://image.pollinations.ai/feed`
+Text Feed: `GET https://text.pollinations.ai/feed`
+*\* required parameter*
+*/
