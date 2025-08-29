@@ -131,7 +131,7 @@ let speaking = false;
  * Pollinations AI TTS only — fetches the audio Blob
  */
 async function fetchAIVoice(text, voice = "onyx") {
-    const formattedText = `Repeat this exactly, deliberate, 9/10 pace, "${text}"`;
+    const formattedText = `Repeat this exactly, patient vibe, "${text}"`;
     const url = `https://text.pollinations.ai/${encodeURIComponent(formattedText)}?model=openai-audio&voice=${voice}`;
 
     try {

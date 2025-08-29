@@ -11,8 +11,8 @@ async function sendCommand(args) {
 
 // SPEECH
 
-import TTS from '/modules/TTS.js';
-import STT from '/modules/STT.js';
+import TTS from '/modules/speech/TTS.js';
+import STT from '/modules/speech/STT.js';
 
 const chatOutput = document.getElementById('chatOutput');
 const chatInput = document.getElementById('chatInput');
@@ -243,22 +243,6 @@ window.addEventListener("resize", resizeCanvases);
 
 
 
-
-
-// install
-const installButton = document.getElementById("installButton");
-installButton.addEventListener("click", async () => {
-  if(confirm('Download at https://ollama.com/download/windows, click OK to continue')) return;{
-    const response = await sendCommand(['ollama --version']);
-    alert(response);
-    if(!confirm('Install models?')) return;
-    alert(`Installing: granite3.3:2b, qwen2.5-coder:3b, granite3.2-vision:2b`);
-    const response2 = await sendCommand(['ollama pull granite3.3:2b', 'ollama pull qwen2.5-coder:3b', 'ollama pull granite3.2-vision:2b']);
-    console.log(response2);
-    alert(`Installed Models: granite3.3:2b, qwen2.5-coder:3b, granite3.2-vision:2b`);
-  };
-})
-
 // TESTING GAN
 
 
@@ -334,9 +318,9 @@ async function fetchAndDrawImage(prompt, width = 512, height = 512, seed = Date.
   });
 }
 
-// TTS.send("Welcome back Sir!");
+TTS.send("Welcome back Sir! How may I assist you?");
 
-// fetchAndDrawImage("Chicken jockey minecraft").then((canvas) => {
+// fetchAndDrawImage("Hello").then((canvas) => {
 //   console.log(canvas);
 // });
 
@@ -398,3 +382,6 @@ Image Feed: `GET https://image.pollinations.ai/feed`
 Text Feed: `GET https://text.pollinations.ai/feed`
 *\* required parameter*
 */
+
+
+import tabHandler from './modules/tabHandler.js';

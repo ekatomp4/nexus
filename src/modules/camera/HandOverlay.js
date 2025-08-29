@@ -155,7 +155,7 @@ function getHandRotation(hand, sameRotation = true) {
     // Left hand stays the same
   }
 
-  return angle;
+  return angle | 0;
 }
 
 // Maximum number of same gesture detections required to trigger an action
@@ -166,9 +166,26 @@ const HandOverlay = {
   positionOverlay: null,
   camera: null,
 
-  pinchedElement: null,
-  originalPinchRotation: null,
-  originalPinchPosition: null,
+  currentPositions: { left: null, right: null }, // current 2D position of each hand
+  currentRotations: { left: null, right: null }, // current rotation of each hand in degrees
+  currentDistances: { left: null, right: null }, // current distance between hands in pixels
+
+  originalPinchedPositions: { left: null, right: null }, // original position of each hand on pinch
+  originalPinchedRotations: { left: null, right: null }, // original rotation of each hand on pinch
+  originalPinchedDistances: { left: null, right: null }, // original distance between hands on pinch
+
+  currentPositionChange: { left: null, right: null }, // change in position since last update
+  currentRotationChange: { left: null, right: null }, // change in rotation since last update
+  currentDistanceChange: { left: null, right: null }, // change in distance since last update
+
+  currentGestures: { left: null, right: null }, // holds the current gesture
+  lastGestures: { left: null, right: null }, // holds the last gestures
+  gestureTimeouts: { left: 0, right: 0 }, // current timeouts
+  maxGestureTimeout: 5, // updates it takes for gesture to expire
+
+  midX: null,
+  midY: null,
+
 
   gestureHistory: { left: [], right: [] }, // track recent gestures for each hand
 
@@ -193,29 +210,82 @@ const HandOverlay = {
 
       const gestures = getGestures(hands);
 
+      let detectedHands = { left: false, right: false };
+
       hands.forEach((hand) => {
         const LoR = hand.handedness === "Left" ? "left" : "right";
+
+        detectedHands[LoR] = true;
+
+        // update positions
+        if(this.midX && this.midY) {
+          this.currentPositions[LoR] = {
+            x: this.midX,
+            y: this.midY
+          }
+        }
+        this.currentRotations[LoR] = getHandRotation(hand);
+        this.currentDistances[LoR] = this.getDistanceFromCamera(hand);
 
         // --- Update gesture history ---
         if (!this.gestureHistory[LoR]) this.gestureHistory[LoR] = [];
         this.gestureHistory[LoR].push(gestures[LoR]);
+        // shift
         if (this.gestureHistory[LoR].length > REQUIRED_CONSECUTIVE_GESTURES) {
           this.gestureHistory[LoR].shift(); // keep only the last N
         }
 
         // --- Multi-verification check ---
-        const allSame = this.gestureHistory[LoR].every(
+        let allSame = this.gestureHistory[LoR].every(
           (g) => g === gestures[LoR] && g !== null
         );
-        let currentGestures = {};
-        if (allSame) {
-          this.handleAction(LoR, gestures[LoR], hand, scaleX, scaleY);
-          currentGestures[LoR] = gestures[LoR];
-        } else {
-          const currentPinched = document.querySelectorAll(".pinched");
-          currentPinched.forEach((el) => el.classList.remove("pinched"));
+        if (this.gestureHistory[LoR].some((g) => g === null)) {
+          allSame = false;
         }
         
+        let currentGestures = {};
+
+
+        // set changes
+        if(this.originalPinchedDistances[LoR]) {
+          this.currentDistanceChange[LoR] = this.currentDistances[LoR] - this.originalPinchedDistances[LoR];
+        }
+        if(this.originalPinchedRotations[LoR]) {
+          this.currentRotationChange[LoR] = this.currentRotations[LoR] - this.originalPinchedRotations[LoR];
+        }
+        if(this.originalPinchedPositions[LoR]) {
+          this.currentPositionChange[LoR] = {
+            x: this.currentPositions[LoR].x - this.originalPinchedPositions[LoR].x,
+            y: this.currentPositions[LoR].y - this.originalPinchedPositions[LoR].y
+          };
+        }
+
+        // --- Handle action ---
+        if (allSame) {
+
+          this.lastGestures[LoR] = gestures[LoR];
+          this.handleAction(LoR, gestures[LoR], hand, scaleX, scaleY);
+          currentGestures[LoR] = gestures[LoR];
+          this.gestureTimeouts[LoR] = 0;
+
+        } else if(this.lastGestures[LoR] && this.gestureTimeouts[LoR] <  this.maxGestureTimeout) {
+
+          this.gestureTimeouts[LoR]++;
+          this.handleAction(LoR, gestures[LoR], hand, scaleX, scaleY);
+          currentGestures[LoR] = this.lastGestures[LoR];
+
+        } else {
+          currentGestures[LoR] = null;
+          // set origins
+          if (gestures[LoR] != "Pinch") { // reset
+            this.originalPinchedPositions[LoR] = null;
+            this.originalPinchedRotations[LoR] = null;
+            this.originalPinchedDistances[LoR] = null;
+            this.currentPositionChange[LoR] = null;
+            this.currentRotationChange[LoR] = null;
+            this.currentDistanceChange[LoR] = null;
+          }
+        }
 
         // --- Draw keypoints ---
         hand.keypoints.forEach((kp) => {
@@ -240,6 +310,19 @@ const HandOverlay = {
         });
       });
 
+      // remove hand positions
+      if (!detectedHands.left) {
+        this.currentPositions.left = null;
+        this.currentRotations.left = null;
+        this.currentDistances.left = null;
+      }
+      if (!detectedHands.right) {
+        this.currentPositions.right = null;
+        this.currentRotations.right = null;
+        this.currentDistances.right = null;
+      }
+
+      // frame again
       requestAnimationFrame(this.drawHandPoints);
     };
 
@@ -253,6 +336,9 @@ const HandOverlay = {
 
     switch (gesture) {
       case "Pinch":
+        // set gesture
+        this.currentGestures[handSide] = gesture;
+        // action
         ctx.fillStyle = "green";
 
         const index = hand.keypoints.find(
@@ -271,29 +357,33 @@ const HandOverlay = {
           const midX = (indexX + thumbX) / 2;
           const midY = (indexY + thumbY) / 2;
 
+          this.midX = midX;
+          this.midY = midY;
+
           // Draw circle at midpoint
           ctx.fillStyle = "orange"
           ctx.beginPath();
           ctx.arc(midX, midY, 10, 0, 2 * Math.PI);
           ctx.fill();
 
-          // Check pinchable element at index finger position
-          const elems = document.elementsFromPoint(indexX, indexY);
-          // remove pinched class from all elements
-          // pinchable element
-          const pinched = elems.find((el) => el.hasAttribute("data-pinchable"));
-          if (pinched) {
-            this.pinchedElement = pinched;
-            this.originalPinchRotation = getHandRotation(hand);
-            this.originalPinchPosition = { x: midX, y: midY };
+          // get element at position
+          const element = document.elementFromPoint(midX, midY);
+          if (element) {
+            const clickEvent = new MouseEvent('click', {
+              bubbles: true,
+              cancelable: true,
+              view: window,
+            });
+            element.dispatchEvent(clickEvent);
+          }
 
-            this.pinchedElement.classList.add("pinched");
-            // this.pinchedElement.style.transform = `scale(1.2)`;
-          } else {
-            this.pinchedElement = null;
-            this.originalPinchRotation = null;
-            this.originalPinchPosition = null;
-          };
+          // set vars 
+          if(!this.originalPinchedDistances[handSide]) {
+            this.originalPinchedDistances[handSide] = this.currentDistances[handSide];
+            this.originalPinchedPositions[handSide] = {x: midX, y: midY};
+            this.originalPinchedRotations[handSide] = this.currentRotations[handSide];
+          }
+
         }
         break;
 
@@ -334,7 +424,7 @@ const HandOverlay = {
       (knownLengthInches * sensorHeightPx) /
       (2 * handHeightPx * Math.tan(verticalFOV / 2));
 
-    return distanceInches;
+    return Math.round(distanceInches * 100) / 100;
   },
 };
 
