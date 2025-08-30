@@ -17,7 +17,7 @@ class Camera {
     this.handRefreshRate = 2; // min 1 
 
     this.tick = 0;
-    this.hands = [];
+    this.hands = []; // TODO make hands dissapear after a certain amount of time instead of dissapearing immerdietly
     this.detector = null;
 
     // ===== Filters =====

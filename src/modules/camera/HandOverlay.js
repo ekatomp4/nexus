@@ -51,12 +51,15 @@ const bones = [
 ];
 
 // Hardcoded gestures with priority
+const tuckedThreshold = 40;
+const openThreshold = 60;
+
 const gestureList = {
   Pinch: {
     distances: [
-      { start: "thumb_tip", end: "index_finger_tip", max: 20 }, // max percent of hand size
+      { start: "thumb_tip", end: "index_finger_tip", max: 25 }, // max percent of hand size
     ],
-    priority: 1,
+    priority: 3,
   },
   "Fingers Down": {
     distances: [
@@ -66,27 +69,79 @@ const gestureList = {
       { start: "pinky_finger_tip", end: "pinky_finger_mcp", max: 25 },
       { start: "thumb_tip", end: "index_finger_tip", min: 25 },
     ],
+    priority: 1,
+  },
+  "Fist": {
+    distances: [
+      { start: "pinky_finger_tip", end: "wrist", max: 60 },
+      { start: "index_finger_tip", end: "thumb_cmc", max: 70 },
+      { start: "middle_finger_tip", end: "wrist", max: 40 },
+      { start: "ring_finger_tip", end: "wrist", max: 50 },
+    ],
+    priority: 3,
+  },
+  // numbers
+  "One": {
+    distances: [
+      { start: "index_finger_tip", end: "wrist", min: openThreshold-5 }, // open
+      { start: "middle_finger_tip", end: "wrist", max: tuckedThreshold+10 }, // tucked
+      { start: "ring_finger_tip", end: "wrist", max: tuckedThreshold }, // tucked
+      { start: "pinky_finger_tip", end: "wrist", max: tuckedThreshold }, // tucked
+      { start: "thumb_tip", end: "middle_finger_tip", max: 40 }, // tucked
+    ],
     priority: 2,
   },
-  // "Fist": {
-  //     distances: [
-  //         // { start: "index_finger_dip", end: "index_finger_mcp", max: 20 },
-  //         // { start: "middle_finger_dip", end: "middle_finger_mcp", max: 20 },
-  //         // { start: "ring_finger_dip", end: "ring_finger_mcp", max: 20 },
-  //         // { start: "pinky_finger_dip", end: "pinky_finger_mcp", max: 20 },
-  //         { start: "index_finger_tip", end: "thumb_mcp", max: 30 },
-  //         // { start: "middle_finger_tip", end: "thumb_mcp", max: 30 },
-  //         // { start: "ring_finger_tip", end: "thumb_mcp", max: 40 },
-  //         { start: "thumb_tip", end: "index_finger_pip", max: 25 },
-  //     ],
-  //     priority: 3
-  // },
-  // "Spread": {
-  //     distances: [
-  //         { start: "thumb_tip", end: "pinky_finger_tip", min: 60 } // min percent of hand size
-  //     ],
-  //     priority: 0
-  // }
+  "Two": {
+    distances: [
+      { start: "index_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "middle_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "ring_finger_tip", end: "wrist", max: tuckedThreshold+10 }, // tucked
+      { start: "pinky_finger_tip", end: "wrist", max: tuckedThreshold }, // tucked
+      { start: "thumb_tip", end: "ring_finger_pip", max: 50 }, // tucked
+    ],
+    priority: 2,
+  },
+  "Three": {
+    distances: [
+      { start: "index_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "middle_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "ring_finger_tip", end: "wrist", min: openThreshold-10 }, // open
+      { start: "pinky_finger_tip", end: "wrist", max: tuckedThreshold+5 }, // tucked
+      { start: "thumb_tip", end: "pinky_finger_pip", max: 60 }, // tucked
+    ],
+    priority: 2,
+  },
+  "Four": {
+    distances: [
+      { start: "index_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "middle_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "ring_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "pinky_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "thumb_tip", end: "ring_finger_mcp", max: 40 }, // tucked
+    ],
+    priority: 2,
+  },
+  "Five": {
+    distances: [
+      { start: "index_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "middle_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "ring_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "pinky_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "thumb_tip", end: "wrist", min: 40 }, // open
+    ],
+    priority: 1,
+  },
+
+  "Circle": {
+    distances: [
+      { start: "index_finger_tip", end: "thumb_tip", max: 25 },
+      { start: "middle_finger_tip", end: "thumb_tip", max: 30 },
+      { start: "ring_finger_tip", end: "thumb_tip", max: 35 },
+      { start: "pinky_finger_tip", end: "thumb_tip", max: 40 },
+    ],
+    priority: 4,
+  }
+
 };
 
 // 3D distance helper
@@ -102,6 +157,9 @@ function dist2D(kp1, kp2) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
+let overlayCtx = null;
+let handSize = 20;
+
 function getGestures(hands) {
   const result = { left: null, right: null };
 
@@ -111,13 +169,13 @@ function getGestures(hands) {
 
     // Find and validate keypoint references
     const wrist = hand.keypoints.find((kp) => kp.name === "wrist");
-    const middleTip = hand.keypoints.find(
-      (kp) => kp.name === "middle_finger_tip"
+    const thumbCmc = hand.keypoints.find(
+      (kp) => kp.name === "thumb_cmc"
     );
-    if (!wrist || !middleTip) return;
+    if (!wrist || !thumbCmc) return;
 
-    // Calculate hand size (distance from wrist to middle finger tip)
-    const handSize = dist3D(wrist, middleTip);
+    // Calculate hand size (distance from wrist to thumb cmc x 1.5)
+    handSize = dist2D(wrist, thumbCmc) * 4;
 
     // Iterate over all gestures
     for (const gesture in gestureList) {
@@ -136,8 +194,8 @@ function getGestures(hands) {
         }
 
         // Check if distance is within bounds
-        // const dist = dist3D(startKp, endKp);
-        const dist = dist2D(startKp, endKp);
+        const dist = dist3D(startKp, endKp);
+        // const dist = dist2D(startKp, endKp);
         if (
           (d.min !== undefined && dist < (d.min / 100) * handSize) ||
           (d.max !== undefined && dist > (d.max / 100) * handSize)
@@ -211,6 +269,7 @@ const HandOverlay = {
   gestureTimeouts: { left: 0, right: 0 }, // current timeouts
   maxGestureTimeout: 5, // updates it takes for gesture to expire
 
+
   midX: null,
   midY: null,
 
@@ -219,6 +278,7 @@ const HandOverlay = {
   init: function (camera) {
     this.positionOverlay = document.getElementById("positionOverlay");
     this.positionCtx = this.positionOverlay.getContext("2d");
+    overlayCtx = this.positionCtx;
     this.camera = camera;
 
     this.drawHandPoints = () => {
@@ -320,6 +380,16 @@ const HandOverlay = {
         }
 
         // --- Draw keypoints ---
+
+        // draw line from wrist upwards handsize
+        const wrist = hand.keypoints.find((kp) => kp.name === "wrist");
+        ctx.strokeStyle = "white";
+        ctx.globalAlpha = 0.2;
+        const scaledHandSize = handSize * scaleY;
+        ctx.moveTo(wrist.x * scaleX, wrist.y * scaleY);
+        ctx.lineTo(wrist.x * scaleX, wrist.y * scaleY - scaledHandSize);
+        ctx.stroke();
+
         // Draw wiremesh for this hand
         ctx.strokeStyle = currentGestures[LoR] ? "green" : "red";
         ctx.lineWidth = 5;
@@ -349,7 +419,6 @@ const HandOverlay = {
           const y = kp.y * scaleY;
           ctx.beginPath();
           ctx.arc(x, y, 5, 0, Math.PI * 2);
-          ctx.fillStyle = currentGestures[LoR] ? "green" : "red";
           ctx.fill();
         });
       });
@@ -383,7 +452,6 @@ const HandOverlay = {
         // set gesture
         this.currentGestures[handSide] = gesture;
         // action
-        ctx.fillStyle = "green";
 
         const index = hand.keypoints.find(
           (kp) => kp.name === "index_finger_tip"
@@ -430,11 +498,37 @@ const HandOverlay = {
               this.currentRotations[handSide];
           }
         }
+
+        ctx.fillStyle = "green";
         break;
 
       case "Fingers Down":
-        // Example: you could trigger a scroll or a selection here
         ctx.fillStyle = "blue";
+        break;
+
+      case "Fist":
+        ctx.fillStyle = "yellow";
+        break;
+
+      // nums
+      case "One":
+        ctx.fillStyle = "pink";
+        break;
+      case "Two":
+        ctx.fillStyle = "purple";
+        break;
+      case "Three":
+        ctx.fillStyle = "lightblue";
+        break;
+      case "Four":
+        ctx.fillStyle = "orange";
+        break;
+      case "Five":
+        ctx.fillStyle = "lightgreen";
+        break;
+        
+      case "Circle":
+        ctx.fillStyle = "cyan";
         break;
 
       default:
