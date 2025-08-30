@@ -1,4 +1,5 @@
 const express = require("express");
+const robot = require("robotjs");
 
 
 const cors = require("cors");
@@ -75,7 +76,20 @@ const faceModel = require('./backend/tools/tensors/faceModel.js');
             console.error("Error in /getExpressions:", err);
             res.status(500).send({ error: err.toString() });
         }
-    });                                                        
+    });     
+    
+    app.post('/movemouse', async (req, res) => {
+        try {
+            const body = req.body;
+
+            // robot.moveMouseSmooth(body.mouse.x, body.mouse.y);
+            robot.moveMouse(body.mouse.x, body.mouse.y);
+
+            res.send(`Success: ${body.mouse.x + ' ' + body.mouse.y}`);
+        } catch(err) {
+            res.send(`Error: ${err}`);
+        }
+    });
 
 
     app.get("/", (req, res) => {
@@ -128,29 +142,4 @@ const NeedsLLMTool = require('./backend/tools/tensors/NeedsLLMTool.js');
 //     console.log(await myModel.predict("world"));
 // })()
 
-// const TextToTextModel = require("./backend/tools/tensormodels/TextToTextModel");
-
-// (async () => {
-//     const model = new TextToTextModel("myModel", "./models/myModel");
-
-//     // Try to load existing model
-//     // const loaded = await model.loadModel();
-//         const allData = [
-//             ["What is your name", "My name is Nexus, the best chat model created by Evan Douglas Schaus!"],
-//             ["How are you", "I am doing great, thanks for asking!"],
-//             ["What can you do", "I can chat with you, help you with tasks, and provide information on a variety of topics."],
-//             ["Tell me a joke", "Why did the scarecrow win an award? Because he was A DIDDLY BLUD!"],
-//             ["What is the capital of France", "The capital of France is Paris. There were also specific people that were in Paris! Can you guess who they were?"],
-//             ["Who is the president of the United States", "As of 2025, the president of the United States is Donald Bump."],
-//             ["What is the largest mammal", "The largest mammal is the blue whale."],
-//             ["How many continents are there", "There are seven continents: Africa, Antarctica, Asia, Europe, North America, Australia, and South America."],
-//             ["What is the boiling point of water", "The boiling point of water is 100 degrees Celsius or 212 degrees Fahrenheit at standard atmospheric pressure."],
-//         ]
-//         await model.train(allData, 100);
-//         // await model.saveModel();
-    
-
-//     const output = await model.generate("How are you", 50);
-//     console.log(output);
-// })();
 

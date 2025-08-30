@@ -113,7 +113,10 @@ class Camera {
 
   async start(constraints = { video: true, audio: false }) {
     try {
-      constraints.video = { width: 160, height: 120 }; // low-res
+      // constraints.video = { width: 160, height: 120 }; // low-res
+      constraints.video = { width: 320, height: 240 }; // medium res
+      // constraints.video = { width: 640, height: 480 }; // higher res
+      
       // TODO options for different qualities
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
       this.video.srcObject = this.stream;

@@ -4,3 +4,13 @@ set custom params
 FRONTEND -> src
 BACKEND -> src-tauri / server / backend
 WEBSITE -> src-tauri / server / frontend
+
+
+IDEAS:
+
+.Sorting photos, files, etc...
+.Directory scanning
+.Optimizing and diagnostics
+.Sketch pad and 3d modeling
+
+.Holding assingnments up to screen, copys assignment to PDF then fills them out / putting them online

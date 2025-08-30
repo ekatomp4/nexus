@@ -67,7 +67,7 @@ const gestureList = {
       { start: "middle_finger_tip", end: "middle_finger_mcp", max: 25 },
       { start: "ring_finger_tip", end: "ring_finger_mcp", max: 25 },
       { start: "pinky_finger_tip", end: "pinky_finger_mcp", max: 25 },
-      { start: "thumb_tip", end: "index_finger_tip", min: 25 },
+      { start: "thumb_tip", end: "index_finger_dip", max: 35}
     ],
     priority: 1,
   },
@@ -77,26 +77,27 @@ const gestureList = {
       { start: "index_finger_tip", end: "thumb_cmc", max: 70 },
       { start: "middle_finger_tip", end: "wrist", max: 40 },
       { start: "ring_finger_tip", end: "wrist", max: 50 },
+      { start: "thumb_tip", end: "index_finger_dip", max: 35}
     ],
-    priority: 3,
+    priority: 4,
   },
   // numbers
   "One": {
     distances: [
       { start: "index_finger_tip", end: "wrist", min: openThreshold-5 }, // open
-      { start: "middle_finger_tip", end: "wrist", max: tuckedThreshold+10 }, // tucked
+      { start: "middle_finger_tip", end: "wrist", max: tuckedThreshold+15 }, // tucked
       { start: "ring_finger_tip", end: "wrist", max: tuckedThreshold }, // tucked
       { start: "pinky_finger_tip", end: "wrist", max: tuckedThreshold }, // tucked
-      { start: "thumb_tip", end: "middle_finger_tip", max: 40 }, // tucked
+      { start: "thumb_tip", end: "middle_finger_pip", max: 40 }, // tucked
     ],
     priority: 2,
   },
   "Two": {
     distances: [
       { start: "index_finger_tip", end: "wrist", min: openThreshold }, // open
-      { start: "middle_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "middle_finger_tip", end: "wrist", min: openThreshold+10 }, // open
       { start: "ring_finger_tip", end: "wrist", max: tuckedThreshold+10 }, // tucked
-      { start: "pinky_finger_tip", end: "wrist", max: tuckedThreshold }, // tucked
+      { start: "pinky_finger_tip", end: "wrist", max: tuckedThreshold+10 }, // tucked
       { start: "thumb_tip", end: "ring_finger_pip", max: 50 }, // tucked
     ],
     priority: 2,
@@ -140,6 +141,38 @@ const gestureList = {
       { start: "pinky_finger_tip", end: "thumb_tip", max: 40 },
     ],
     priority: 4,
+  },
+
+  "Wolf": {
+    distances: [
+      { start: "index_finger_tip", end: "wrist", min: openThreshold }, // open
+      { start: "middle_finger_tip", end: "wrist", max: tuckedThreshold+10 }, // tucked
+      { start: "ring_finger_tip", end: "wrist", max: tuckedThreshold+10 }, // tucked
+      { start: "pinky_finger_tip", end: "wrist", min: openThreshold }, // open
+    ],
+    priority: 4,
+  },
+
+  "Middle Finger": {
+    distances: [
+      { start: "index_finger_tip", end: "wrist", max: tuckedThreshold+30 }, // tucked
+      { start: "middle_finger_tip", end: "wrist", min: openThreshold+5 }, // open
+      { start: "ring_finger_tip", end: "wrist", max: tuckedThreshold+15 }, // tucked
+      { start: "pinky_finger_tip", end: "wrist", max: tuckedThreshold+15 }, // tucked
+    ],
+    priority: 4,  
+  },
+
+  "Thumb": {
+    distances: [
+      { start: "index_finger_tip", end: "wrist", max: tuckedThreshold+15 }, // tucked
+      { start: "middle_finger_tip", end: "wrist", max: tuckedThreshold+15 }, // tucked
+      { start: "ring_finger_tip", end: "wrist", max: tuckedThreshold+15 }, // tucked
+      { start: "pinky_finger_tip", end: "wrist", max: tuckedThreshold+15 }, // tucked
+      { start: "thumb_tip", end: "wrist", min: 40 }, // open 
+      { start: "thumb_tip", end: "index_finger_dip", min: 35}
+    ],
+    priority: 3,  
   }
 
 };
@@ -244,13 +277,15 @@ function getHandRotation(hand, sameRotation = true) {
   return angle | 0;
 }
 
-// Maximum number of same gesture detections required to trigger an action
-const REQUIRED_CONSECUTIVE_GESTURES = 3;
+
 
 const HandOverlay = {
   positionCtx: null,
   positionOverlay: null,
   camera: null,
+
+  // Maximum number of same gesture detections required to trigger an action
+  MAX_CONSECUTIVE_GESTURES: 30,
 
   currentPositions: { left: null, right: null }, // current 2D position of each hand
   currentRotations: { left: null, right: null }, // current rotation of each hand in degrees
@@ -265,9 +300,6 @@ const HandOverlay = {
   currentDistanceChange: { left: null, right: null }, // change in distance since last update
 
   currentGestures: { left: null, right: null }, // holds the current gesture
-  lastGestures: { left: null, right: null }, // holds the last gestures
-  gestureTimeouts: { left: 0, right: 0 }, // current timeouts
-  maxGestureTimeout: 5, // updates it takes for gesture to expire
 
 
   midX: null,
@@ -318,17 +350,11 @@ const HandOverlay = {
         if (!this.gestureHistory[LoR]) this.gestureHistory[LoR] = [];
         this.gestureHistory[LoR].push(gestures[LoR]);
         // shift
-        if (this.gestureHistory[LoR].length > REQUIRED_CONSECUTIVE_GESTURES) {
+        if (this.gestureHistory[LoR].length > this.MAX_CONSECUTIVE_GESTURES) {
           this.gestureHistory[LoR].shift(); // keep only the last N
         }
 
         // --- Multi-verification check ---
-        let allSame = this.gestureHistory[LoR].every(
-          (g) => g === gestures[LoR] && g !== null
-        );
-        if (this.gestureHistory[LoR].some((g) => g === null)) {
-          allSame = false;
-        }
 
         let currentGestures = {};
 
@@ -353,18 +379,21 @@ const HandOverlay = {
         }
 
         // --- Handle action ---
-        if (allSame) {
-          this.lastGestures[LoR] = gestures[LoR];
-          this.handleAction(LoR, gestures[LoR], hand, scaleX, scaleY);
-          currentGestures[LoR] = gestures[LoR];
-          this.gestureTimeouts[LoR] = 0;
-        } else if (
-          this.lastGestures[LoR] &&
-          this.gestureTimeouts[LoR] < this.maxGestureTimeout
-        ) {
-          this.gestureTimeouts[LoR]++;
-          this.handleAction(LoR, gestures[LoR], hand, scaleX, scaleY);
-          currentGestures[LoR] = this.lastGestures[LoR];
+        let majorityGesture = this.gestureHistory[LoR].reduce(
+          (acc, cur) => {
+            acc[cur] = (acc[cur] || 0) + 1;
+            if (acc[cur] > acc.majority) {
+              acc.majority = acc[cur];
+              acc.majorityGesture = cur;
+            }
+            return acc;
+          },
+          { majority: 0, majorityGesture: null }
+        ).majorityGesture;
+
+        if(majorityGesture) {
+          currentGestures[LoR] = majorityGesture;
+          this.handleAction(LoR, majorityGesture, hand, scaleX, scaleY);
         } else {
           currentGestures[LoR] = null;
           // set origins
@@ -472,6 +501,10 @@ const HandOverlay = {
           this.midX = midX;
           this.midY = midY;
 
+          if(Date.now() % 2 == 0) {
+            window.controller.moveMouse(midX, midY);
+          }
+
           // Draw circle at midpoint
           ctx.fillStyle = "orange";
           ctx.beginPath();
@@ -529,6 +562,18 @@ const HandOverlay = {
         
       case "Circle":
         ctx.fillStyle = "cyan";
+        break;
+
+      case "Wolf":
+        ctx.fillStyle = "white"
+        break;
+
+      case "Middle Finger":
+        ctx.fillStyle = "brown";
+        break;
+
+      case "Thumb":
+        ctx.fillStyle = "grey";
         break;
 
       default:

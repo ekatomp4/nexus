@@ -7,6 +7,8 @@ async function sendCommand(args) {
     .then(response => response.text());
 }
 
+import all from "./all.js";
+
 // sendCommand(['start calc.exe']);
 
 // SPEECH
@@ -318,7 +320,7 @@ async function fetchAndDrawImage(prompt, width = 512, height = 512, seed = Date.
   });
 }
 
-TTS.send("Welcome back Sir! How may I assist you?");
+// TTS.send("Welcome back Sir! How may I assist you?");
 
 // fetchAndDrawImage("Hello").then((canvas) => {
 //   console.log(canvas);

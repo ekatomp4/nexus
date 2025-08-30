@@ -4,11 +4,11 @@ const fs = require('fs');
 const sharp = require('sharp');
 const os = require('os');
 
-const getWiki = require('./modelTools/getWiki');
-(async () => {
-    const returnData = await getWiki('Trenbolone acetate');
-    console.log(returnData);
-})();
+// const getWiki = require('./modelTools/getWiki');
+// (async () => {
+//     const returnData = await getWiki('Trenbolone acetate');
+//     console.log(returnData);
+// })();
 
 
 const NeedsLLMTool = require('../tools/tensors/NeedsLLMTool');
@@ -186,7 +186,7 @@ class ChatBotV1 {
 
         // tools
         this.systemPrompts = [
-            `Your name is Nexus (model ${this.modelName}), try to respond in under a sentence, 
+            `Your name is Nexus (model ${this.modelName}), try to respond in under a sentence but still over 5 words, 
             follow commands strictly. Don't use any onomonopia or actions, do not repeat yourself`,
 
             `Machine specs: ${JSON.stringify(this.specs)}`,
@@ -294,10 +294,8 @@ class ChatBotV1 {
 
         // run
 
-        if (!chosenModel) throw new Error('No model selected');
-        console.log(`[ChatBotV1] Running prompt on model: ${chosenModel}`);
-
         const formattedText = `${text}`;
+
 
         // Images to be included in the message, either as Uint8Array or base64 encoded strings.
         const images = ['testimage.jpg'];
@@ -332,9 +330,44 @@ class ChatBotV1 {
             this.clampHistoryLength();
         }
 
-        // console.log(history);
+        // run selected model
+
+        const useOnline = true;
+
+        if(useOnline) {
+            console.log('[ChatBotV1] Running prompt on pollinations');
+
+            const response = await fetch('https://text.pollinations.ai/openai', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'openai',
+                    messages: history,
+                    temperature: this.options.temperature,
+                    private: true
+                })
+            });
+            if (!response.ok) {
+                console.error('Error response:', response.status, response.statusText);
+                throw new Error(`Error response: ${response.status} ${response.statusText}`);
+            }
+            let text = await response.text();
+            text = JSON.parse(text);
+
+            console.log('[ChatBotV1] Response from pollinations:', text);
+            if(!text) throw new Error('No response from pollinations');
+            if (this.onMessage) this.onMessage(text.choices[0].message.content);
+            if (this.socket) this.socket.broadcast(text.choices[0].message.content);
+            return text;
+        }
 
         // Stream with full conversation history
+
+        if (!chosenModel) throw new Error('No model selected');
+        console.log(`[ChatBotV1] Running prompt on model: ${chosenModel}`);
+
         const response = await ollama.chat({
             model: chosenModel,
             messages: history,
